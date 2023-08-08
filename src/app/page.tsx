@@ -7,6 +7,9 @@ import Dropdown from "../../components/Dropdown"
 import {Radio} from "@material-tailwind/react"
 import Image from "next/image";
 import formImage from "../../public/TutoringFlier.png"
+import { useFormik } from "formik";
+import useScanDetection from "use-scan-detection";
+import * as Yup from "yup"
 
 /* Created a type to allow indexing via strings 
    It's an object with strings as keys AND array values
@@ -15,7 +18,38 @@ type OptionsBySubject = {
   [key:string] : string[];
 };
 
+const validationSchema = Yup.object().shape({
+  UID: Yup.string().required("*Please Scan the SMALL BARCODE on your ID"),
+  subject: Yup.string().required("*Please select a subject"),
+  class: Yup.string().required("*Please select a class"),
+});
+
 export default function Home(){
+
+  //Formik Logics
+  const formik = useFormik({
+    initialValues: {
+      UID: "",
+      subject: "",
+      class:"",
+      tarTutor: ""
+    },
+    validationSchema,
+    onSubmit: (values) => {
+      // Handle database submission here
+      console.log(values)
+    },
+  })
+
+  const [barcodeScan,setBarcodeScan] = useState("Please Scan Your ID");
+
+  useScanDetection({
+    onComplete: (code:String) =>
+    {
+      setBarcodeScan(String(code))
+    },
+    minLength:3
+  })
 
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedOption, setSelectedOption] = useState<string>("");
@@ -91,11 +125,11 @@ export default function Home(){
       <main className="h-screen flex items-center justify-center">
         {/* ACTUAL Form
             className defines all of it's properties on screen */}
-        <form className="bg-white flex rounded-lg w-3/4 font-latoRegular">
+        <form className="bg-white flex rounded-lg w-3/4 font-latoRegular" onSubmit={formik.handleSubmit}>
           {/* Form Content DIV */}
-          <div className="flex-1 text-gray-700 p-20">
-            <h1 className="text-2xl pb-2 font-latoBold">University of Bridgeport Tutoring Sign-In Sheet</h1>
-            <p className="text-lg text-gray-500">Please scan your ID card and fill out the rest of the form below.</p>
+          <div className="flex-1 text-gray-700 p-14">
+            <h1 className="text-xl pb-2 font-latoBold">University of Bridgeport Tutoring Sign-In Sheet</h1>
+            <p className="text-md text-gray-500 pb-2">Please scan the SMALL BARCODE on your ID Card and fill out the rest of the form below.</p>
             <div className="mt-0">
               {/* Unique ID Field */}
               <div className="pb-4">
@@ -105,36 +139,67 @@ export default function Home(){
                   type="text"
                   name="UID"
                   placeholder="Scan your ID"
+                  value={barcodeScan}
+                  onChange={formik.handleChange}
                   disabled                
                 />
+                {formik.touched.UID && formik.errors.UID ? (
+                  <div className="text-red-500 font-latoBold text-sm">{formik.errors.UID}</div>
+                ): null}
               </div>
+
               {/* Subject Dropdown */}
-              <div>
-                <Dropdown 
+              <div className="pb-4">
+                <Dropdown
                   label="Select Subject"
                   options={subjectOptions}
                   value={selectedSubject}
-                  onChange={handleSubjectChange}
+                  onChange = {(e: React.ChangeEvent<HTMLSelectElement>) => {
+                    handleSubjectChange(e);
+                    formik.setFieldValue("subject", e.target.value);
+                  }}
                 />
+                {formik.touched.subject && formik.errors.subject ? (
+                  <div className="text-red-500 font-latoBold text-sm">{formik.errors.subject}</div>
+                ): null}
               </div>
+
               {/* Displaying Classes Dropdown */}
-              <div>
+              <div className="pb-4">
                <Dropdown 
                 label="Select Class"
                 options={options}
                 value={selectedOption}
-                onChange={handleOptionChange}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  handleOptionChange(e);
+                  formik.setFieldValue("class", e.target.value);
+                }}
                />
+                {formik.touched.class && formik.errors.class ? (
+                  <div className="text-red-500 font-latoBold text-sm">{formik.errors.class}</div>
+                ): null}
               </div>
               {/* Targeted Tutoring */}
               <div className="w-1/2">
                 <label className="block font-latoBold text-sm pb-2">Targeted Tutoring</label>
                   <label className="flex items-center">
-                    <Radio name="type" ripple={false} />
+                    <Radio 
+                      name="tarTutor" 
+                      ripple={false} 
+                      value="yes"
+                      checked={formik.values.tarTutor === "yes"}
+                      onChange={formik.handleChange}
+                    />
                     <span className="ml-2">Yes</span>
                   </label>
                   <label className="flex items-center">
-                    <Radio name="type" ripple={false} defaultChecked />
+                    <Radio 
+                      name="tarTutor" 
+                      ripple={false}
+                      value="no"
+                      checked={formik.values.tarTutor === "no"}
+                      onChange={formik.handleChange}
+                    />
                     <span className="ml-2">No</span>
                   </label>
               </div>
@@ -151,7 +216,7 @@ export default function Home(){
               className="rounded-lg" 
               src={formImage} 
               fill 
-              alt={""}
+              alt={"form-image"}
             />
           </div>
         </form>

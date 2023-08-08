@@ -3,7 +3,7 @@ import React from 'react';
 const Dropdown = ({ label, options, value, onChange }) => {
   
   return (
-    <div className="pb-4">
+    <div>
       <label className="block font-latoBold text-sm pb-2">{label}</label>
       <select
         className="border-2 border-gray-500 p-2 rounded-md w-1/2 focus:outline-violet-700 shadow-sm"
