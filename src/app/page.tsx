@@ -10,6 +10,7 @@ import formImage from "../../public/TutoringFlier.png"
 import { useFormik } from "formik";
 import useScanDetection from "use-scan-detection";
 import * as Yup from "yup"
+import { useRouter } from "next/navigation";
 
 /* Created a type to allow indexing via strings 
    It's an object with strings as keys AND array values
@@ -18,26 +19,54 @@ type OptionsBySubject = {
   [key:string] : string[];
 };
 
+/* Handles all the validation for the form 
+   Since class and subject have default values tests must be added 
+   Avoids user from submitting default value and forces them to pick an option
+   All values created by Formik remove spaces HENCE,
+   Select a Subject -> SelectaSubject
+   So the test cases MUST STAY WITHOUT SPACES
+*/
 const validationSchema = Yup.object().shape({
-  UID: Yup.string().required("*Please Scan the SMALL BARCODE on your ID"),
-  subject: Yup.string().required("*Please select a subject"),
-  class: Yup.string().required("*Please select a class"),
+  UID: Yup.string().required("*Please Scan the SMALL BARCODE on your ID").matches(/^\d{6}$/,"Please Scan Small Barcode"),
+  subject: Yup.string()
+    .required("*Please select a subject")
+    .test("is-valid-subject", "*Please select a subject", (value) => value !== "SelectaSubject"),
+  class: Yup.string()
+    .required("*Please select a class")
+    .test("is-valid-class", "*Please select a class", (value) => value !== "SelectaClass"),
 });
 
 export default function Home(){
 
+  // Re-direct to success page
+  const router = useRouter();
+  
   //Formik Logics
   const formik = useFormik({
     initialValues: {
       UID: "",
       subject: "",
       class:"",
-      tarTutor: ""
+      tarTutor: "",
+      timeOfSub: "",
+      dateOfSub: ""
     },
     validationSchema,
     onSubmit: (values) => {
+      const currentDate = new Date();
+      const dateParts = currentDate.toISOString().split("T")[0].split("-");
+      const timeParts = currentDate.toTimeString().split(" ")[0].split(":");
+      
+      // Remove leading zeros from date and time for Google formatting
+      const formattedDate = dateParts.map(part => parseInt(part).toString()).join("/");
+      const formattedTime = timeParts.map(part => parseInt(part).toString()).join(":");
+      
+      formik.values.dateOfSub = formattedDate;
+      formik.values.timeOfSub = formattedTime;
+    
       // Handle database submission here
-      console.log(values)
+      console.log(values);
+      router.push("/success"); 
     },
   })
 
@@ -46,7 +75,8 @@ export default function Home(){
   useScanDetection({
     onComplete: (code:String) =>
     {
-      setBarcodeScan(String(code))
+      setBarcodeScan(String(code));
+      formik.setFieldValue("UID", String(code));
     },
     minLength:3
   })
@@ -57,6 +87,7 @@ export default function Home(){
   const subjects = ["Select a Subject", "Math", "Physics", "Computer Science", "Psychology", "Electrical Engineering", "Other"];
   const optionsBySubject: OptionsBySubject = {
     Math: [
+      "Select a Class",
       "Math 102: Nature of Mathematics",
       "Math 103: Intro to College Algebra/Statistics",
       "Math 106: College Algebra",
@@ -74,6 +105,7 @@ export default function Home(){
       "Math Club"
     ],
     Physics: [
+      "Select a Class",
       "Physics 103: Basic Concepts of Physics I",
       "Physics 104: Basic Concepts of Physics II",
       "Physics 201: General Physics I",
@@ -83,18 +115,22 @@ export default function Home(){
       "Physics 207: Principles of Physics III",
     ],
     ComputerScience:[
+      "Select a Class",
       "CS 101: Intro. to Comp I", 
       "CS 102: Intro. to Comp II",
       "CS&nbsp 329: Fundamentals of Algorithms"
     ],
     Psychology:[
+      "Select a Class",
       "Psychology 385: Statistical Methods in Psychology"
     ],
     ElectricalEngineering:[
+      "Select a Class",
       "ELEG 233: Network Analysis I",
       "ELEG 234: Network Analysis II"
     ],
     Other:[
+      "Select a Class",
       "Studying",
       "Class Not Included"
     ]
