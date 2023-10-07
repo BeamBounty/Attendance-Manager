@@ -11,6 +11,7 @@ import { useFormik } from "formik";
 import useScanDetection from "use-scan-detection";
 import * as Yup from "yup"
 import { useRouter } from "next/navigation";
+import { appendDataToSheet } from "../../components/GoogleSheetsAPI"
 
 /* Created a type to allow indexing via strings 
    It's an object with strings as keys AND array values
@@ -52,7 +53,7 @@ export default function Home(){
       dateOfSub: ""
     },
     validationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const currentDate = new Date();
       const dateParts = currentDate.toISOString().split("T")[0].split("-");
       const timeParts = currentDate.toTimeString().split(" ")[0].split(":");
@@ -64,9 +65,10 @@ export default function Home(){
       formik.values.dateOfSub = formattedDate;
       formik.values.timeOfSub = formattedTime;
     
-      // Handle database submission here
+      // Call the appendDataToSheet function to send data to the Google Sheet
+      await appendDataToSheet(formik.values);
       console.log(values);
-      router.push("/success"); 
+      router.push("/success");
     },
   })
 
@@ -118,7 +120,7 @@ export default function Home(){
       "Select a Class",
       "CS 101: Intro. to Comp I", 
       "CS 102: Intro. to Comp II",
-      "CS&nbsp 329: Fundamentals of Algorithms"
+      "CS 329: Fundamentals of Algorithms"
     ],
     Psychology:[
       "Select a Class",

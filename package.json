@@ -16,11 +16,12 @@
     "autoprefixer": "10.4.14",
     "eslint": "8.45.0",
     "eslint-config-next": "13.4.12",
+    "express": "^4.18.2",
     "formik": "^2.4.3",
     "framer-motion": "^10.15.1",
     "googleapis": "^126.0.1",
-    "next": "13.4.12",
-    "postcss": "8.4.27",
+    "next": "^13.5.4",
+    "postcss": "^8.4.31",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tailwindcss": "^3.3.3",
@@ -29,6 +30,7 @@
     "yup": "^1.2.0"
   },
   "devDependencies": {
+    "encoding": "^0.1.13",
     "lato-font": "^3.0.0"
   }
 }
